@@ -2,9 +2,11 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,6 +23,24 @@ const Navbar = () => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
+
+  const handleSignIn = () => {
+    toast({
+      title: "Sign In",
+      description: "Sign in functionality will be implemented in a future update.",
+      duration: 3000,
+    });
+    console.log("Sign In button clicked");
+  };
+
+  const handleSignUp = () => {
+    toast({
+      title: "Sign Up",
+      description: "Sign up functionality will be implemented in a future update.",
+      duration: 3000,
+    });
+    console.log("Sign Up button clicked");
+  };
 
   return (
     <header
@@ -75,10 +95,15 @@ const Navbar = () => {
               variant="ghost"
               size="sm"
               className="hidden md:inline-flex text-sm"
+              onClick={handleSignIn}
             >
               Sign In
             </Button>
-            <Button size="sm" className="text-sm bg-bazaar-600 hover:bg-bazaar-700">
+            <Button 
+              size="sm" 
+              className="text-sm bg-bazaar-600 hover:bg-bazaar-700"
+              onClick={handleSignUp}
+            >
               Sign Up
             </Button>
           </div>
