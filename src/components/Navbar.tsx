@@ -1,11 +1,25 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { Search, UserCircle } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import SignIn from "@/components/auth/SignIn";
+import SignUp from "@/components/auth/SignUp";
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
+  const [isSignInOpen, setIsSignInOpen] = useState(false);
+  const [isSignUpOpen, setIsSignUpOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -18,6 +32,15 @@ const Navbar = () => {
       }
     };
 
+    // Check if user is authenticated from localStorage
+    const checkAuth = () => {
+      const user = localStorage.getItem("user");
+      if (user) {
+        setIsAuthenticated(true);
+      }
+    };
+
+    checkAuth();
     window.addEventListener("scroll", handleScroll);
     return () => {
       window.removeEventListener("scroll", handleScroll);
@@ -25,21 +48,21 @@ const Navbar = () => {
   }, []);
 
   const handleSignIn = () => {
-    toast({
-      title: "Sign In",
-      description: "Sign in functionality will be implemented in a future update.",
-      duration: 3000,
-    });
-    console.log("Sign In button clicked");
+    setIsSignInOpen(true);
   };
 
   const handleSignUp = () => {
+    setIsSignUpOpen(true);
+  };
+
+  const handleSignOut = () => {
+    localStorage.removeItem("user");
+    setIsAuthenticated(false);
     toast({
-      title: "Sign Up",
-      description: "Sign up functionality will be implemented in a future update.",
+      title: "Signed Out",
+      description: "You have been successfully signed out.",
       duration: 3000,
     });
-    console.log("Sign Up button clicked");
   };
 
   return (
@@ -91,21 +114,72 @@ const Navbar = () => {
             <Button variant="outline" size="icon" className="hidden md:flex">
               <Search className="h-4 w-4" />
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="hidden md:inline-flex text-sm"
-              onClick={handleSignIn}
-            >
-              Sign In
-            </Button>
-            <Button 
-              size="sm" 
-              className="text-sm bg-bazaar-600 hover:bg-bazaar-700"
-              onClick={handleSignUp}
-            >
-              Sign Up
-            </Button>
+
+            {!isAuthenticated ? (
+              <>
+                <Dialog open={isSignInOpen} onOpenChange={setIsSignInOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="hidden md:inline-flex text-sm"
+                      onClick={handleSignIn}
+                    >
+                      Sign In
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <SignIn onSuccess={() => {
+                      setIsSignInOpen(false);
+                      setIsAuthenticated(true);
+                    }} />
+                  </DialogContent>
+                </Dialog>
+
+                <Dialog open={isSignUpOpen} onOpenChange={setIsSignUpOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      size="sm" 
+                      className="text-sm bg-bazaar-600 hover:bg-bazaar-700"
+                      onClick={handleSignUp}
+                    >
+                      Sign Up
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <SignUp onSuccess={() => {
+                      setIsSignUpOpen(false);
+                      setIsAuthenticated(true);
+                    }} />
+                  </DialogContent>
+                </Dialog>
+              </>
+            ) : (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <UserCircle className="h-6 w-6" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <a href="#" className="w-full">Profile</a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <a href="#" className="w-full">My Prompts</a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <a href="#" className="w-full">Settings</a>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </div>
