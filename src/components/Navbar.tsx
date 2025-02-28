@@ -14,12 +14,16 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import SignIn from "@/components/auth/SignIn";
 import SignUp from "@/components/auth/SignUp";
+import { supabase } from "@/integrations/supabase/client";
+import { Session } from "@supabase/supabase-js";
 
 const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [isSignInOpen, setIsSignInOpen] = useState(false);
   const [isSignUpOpen, setIsSignUpOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [session, setSession] = useState<Session | null>(null);
+  const [userProfile, setUserProfile] = useState<{ name?: string, email?: string } | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -32,18 +36,50 @@ const Navbar = () => {
       }
     };
 
-    // Check if user is authenticated from localStorage
-    const checkAuth = () => {
-      const user = localStorage.getItem("user");
-      if (user) {
-        setIsAuthenticated(true);
+    // Check the current auth session and subscribe to auth changes
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      setIsAuthenticated(!!session);
+      
+      if (session?.user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('name, email')
+          .eq('id', session.user.id)
+          .single();
+        
+        setUserProfile(data);
       }
     };
 
     checkAuth();
+
+    // Subscribe to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setIsAuthenticated(!!session);
+      
+      // Fetch user profile when auth state changes
+      if (session?.user) {
+        supabase
+          .from('profiles')
+          .select('name, email')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data }) => {
+            setUserProfile(data);
+          });
+      } else {
+        setUserProfile(null);
+      }
+    });
+
     window.addEventListener("scroll", handleScroll);
+    
     return () => {
       window.removeEventListener("scroll", handleScroll);
+      subscription.unsubscribe();
     };
   }, []);
 
@@ -55,9 +91,19 @@ const Navbar = () => {
     setIsSignUpOpen(true);
   };
 
-  const handleSignOut = () => {
-    localStorage.removeItem("user");
-    setIsAuthenticated(false);
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out",
+        variant: "destructive",
+        duration: 3000,
+      });
+      return;
+    }
+    
     toast({
       title: "Signed Out",
       description: "You have been successfully signed out.",
@@ -131,7 +177,6 @@ const Navbar = () => {
                   <DialogContent className="sm:max-w-md">
                     <SignIn onSuccess={() => {
                       setIsSignInOpen(false);
-                      setIsAuthenticated(true);
                     }} />
                   </DialogContent>
                 </Dialog>
@@ -149,7 +194,6 @@ const Navbar = () => {
                   <DialogContent className="sm:max-w-md">
                     <SignUp onSuccess={() => {
                       setIsSignUpOpen(false);
-                      setIsAuthenticated(true);
                     }} />
                   </DialogContent>
                 </Dialog>
@@ -162,7 +206,9 @@ const Navbar = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuLabel>
+                    {userProfile?.name || session?.user?.email}
+                  </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>
                     <a href="#" className="w-full">Profile</a>

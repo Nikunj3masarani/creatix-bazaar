@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SignUpProps {
   onSuccess: () => void;
@@ -16,7 +17,7 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Simple validation
@@ -42,17 +43,22 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
     
     setIsLoading(true);
     
-    // In a real app, you would call your auth API here
-    // For demo purposes, we'll simulate a successful registration after a delay
-    setTimeout(() => {
-      const user = {
-        name,
+    try {
+      // Register the user with Supabase
+      const { data, error } = await supabase.auth.signUp({
         email,
-      };
-      
-      // Store user in localStorage
-      localStorage.setItem('user', JSON.stringify(user));
-      
+        password,
+        options: {
+          data: {
+            name,
+          },
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
       // Success notification
       toast({
         title: "Account Created",
@@ -60,9 +66,17 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
         duration: 3000,
       });
       
-      setIsLoading(false);
       onSuccess();
-    }, 1000);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create account",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
