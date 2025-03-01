@@ -2,7 +2,7 @@
 import { useState, useRef } from "react";
 import { Prompt } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { Copy, Heart } from "lucide-react";
+import { Copy, Heart, User } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "@/hooks/use-toast";
@@ -16,6 +16,7 @@ const PromptCard = ({ prompt, featured = false }: PromptCardProps) => {
   const [isLiked, setIsLiked] = useState(false);
   const [stats, setStats] = useState(prompt.stats);
   const [isHovered, setIsHovered] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
   
   const copyToClipboard = () => {
@@ -49,6 +50,10 @@ const PromptCard = ({ prompt, featured = false }: PromptCardProps) => {
   const truncateText = (text: string, maxLength: number) => {
     if (text.length <= maxLength) return text;
     return text.slice(0, maxLength) + '...';
+  };
+
+  const handleImageError = () => {
+    setImageError(true);
   };
 
   return (
@@ -100,12 +105,17 @@ const PromptCard = ({ prompt, featured = false }: PromptCardProps) => {
         
         <CardFooter className="p-5 pt-3 flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="w-6 h-6 rounded-full bg-neutral-200 dark:bg-neutral-700 overflow-hidden flex-shrink-0">
-              <img 
-                src="https://source.unsplash.com/random/100x100" 
-                alt={prompt.author.name}
-                className="w-full h-full object-cover"
-              />
+            <div className="w-6 h-6 rounded-full bg-neutral-200 dark:bg-neutral-700 overflow-hidden flex-shrink-0 flex items-center justify-center">
+              {!imageError && prompt.author.avatar ? (
+                <img 
+                  src={prompt.author.avatar} 
+                  alt={prompt.author.name}
+                  className="w-full h-full object-cover"
+                  onError={handleImageError}
+                />
+              ) : (
+                <User className="h-3.5 w-3.5 text-neutral-500 dark:text-neutral-400" />
+              )}
             </div>
             <span className="text-xs text-neutral-600 dark:text-neutral-400">
               {prompt.author.name}
