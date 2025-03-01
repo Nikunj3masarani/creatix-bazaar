@@ -58,10 +58,12 @@ const Explore = () => {
         // Parse the stats from JSON if needed
         let stats = { views: 0, copies: 0, likes: 0 };
         if (typeof item.stats === 'object' && item.stats !== null) {
+          // Safely access nested properties with type checking
+          const statsObj = item.stats as Record<string, any>;
           stats = {
-            views: item.stats.views || 0,
-            copies: item.stats.copies || 0,
-            likes: item.stats.likes || 0
+            views: typeof statsObj.views === 'number' ? statsObj.views : 0,
+            copies: typeof statsObj.copies === 'number' ? statsObj.copies : 0,
+            likes: typeof statsObj.likes === 'number' ? statsObj.likes : 0
           };
         }
 

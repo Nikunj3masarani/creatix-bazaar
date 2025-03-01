@@ -66,8 +66,15 @@ const Index = () => {
               }`}
             >
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <SearchBar onSearch={handleSearch} />
-                <FilterMenu filters={filters} onFilterChange={handleFilterChange} />
+                <SearchBar 
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                  onSearch={handleSearch}
+                />
+                <FilterMenu 
+                  filters={filters} 
+                  onChange={handleFilterChange}
+                />
               </div>
             </div>
             

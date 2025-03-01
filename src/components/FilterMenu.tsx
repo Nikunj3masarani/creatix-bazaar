@@ -18,24 +18,31 @@ import { categories } from "@/lib/data";
 
 interface FilterMenuProps {
   filters: SearchFilters;
-  onChange: (filters: SearchFilters) => void;
+  onChange?: (filters: SearchFilters) => void;
+  onFilterChange?: (filters: SearchFilters) => void;
 }
 
-const FilterMenu = ({ filters, onChange }: FilterMenuProps) => {
+const FilterMenu = ({ filters, onChange, onFilterChange }: FilterMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleCategoryChange = (value: string) => {
-    onChange({ 
+    const newFilters = { 
       ...filters, 
       category: value as Category 
-    });
+    };
+    
+    if (onChange) onChange(newFilters);
+    if (onFilterChange) onFilterChange(newFilters);
   };
 
   const handleSortChange = (value: string) => {
-    onChange({ 
+    const newFilters = { 
       ...filters, 
       sortBy: value as "popular" | "newest" | "most copied" 
-    });
+    };
+    
+    if (onChange) onChange(newFilters);
+    if (onFilterChange) onFilterChange(newFilters);
   };
 
   return (

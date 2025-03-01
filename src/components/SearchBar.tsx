@@ -3,14 +3,25 @@ import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 interface SearchBarProps {
-  value: string;
-  onChange: (value: string) => void;
+  value?: string;
+  onChange?: (value: string) => void;
+  onSearch?: (value: string) => void;
   placeholder?: string;
 }
 
-const SearchBar = ({ value, onChange, placeholder = "Search..." }: SearchBarProps) => {
+const SearchBar = ({ 
+  value = "", 
+  onChange, 
+  onSearch, 
+  placeholder = "Search..." 
+}: SearchBarProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (onSearch) onSearch(value);
+  };
+
+  const handleChange = (newValue: string) => {
+    if (onChange) onChange(newValue);
   };
 
   return (
@@ -22,7 +33,7 @@ const SearchBar = ({ value, onChange, placeholder = "Search..." }: SearchBarProp
         type="text"
         placeholder={placeholder}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => handleChange(e.target.value)}
         className="h-12 pr-12 pl-5 rounded-full border-neutral-200 focus:border-bazaar-400 transition-all"
       />
       <button
