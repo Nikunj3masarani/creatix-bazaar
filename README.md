@@ -2,7 +2,7 @@
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/cfefb2b1-0385-41c8-9dd1-c84bbcf0fa3d
+**URL**: [Go to App](https://preview--creatix-bazaar.lovable.app/)
 
 ## How can I edit this code?
 
