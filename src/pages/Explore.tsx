@@ -1,8 +1,88 @@
 
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import SearchBar from "@/components/SearchBar";
+import FilterMenu from "@/components/FilterMenu";
+import PromptGrid from "@/components/PromptGrid";
+import { Prompt, SearchFilters, Category } from "@/lib/types";
 
 const Explore = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState<SearchFilters>({
+    category: "All",
+    sortBy: "newest"
+  });
+
+  // Fetch prompts from Supabase
+  const { data: prompts, isLoading, error } = useQuery({
+    queryKey: ["prompts", filters],
+    queryFn: async () => {
+      let query = supabase
+        .from("prompts")
+        .select(`
+          id,
+          title,
+          description,
+          content,
+          category,
+          tags,
+          created_at,
+          stats,
+          profiles (name, avatar_url)
+        `);
+
+      if (filters.category !== "All") {
+        query = query.eq("category", filters.category);
+      }
+
+      if (filters.sortBy === "newest") {
+        query = query.order("created_at", { ascending: false });
+      } else if (filters.sortBy === "popular") {
+        // For now, we'll sort by raw views value, but this could be more sophisticated
+        query = query.order("stats->views", { ascending: false });
+      } else if (filters.sortBy === "most copied") {
+        query = query.order("stats->copies", { ascending: false });
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("Error fetching prompts:", error);
+        throw new Error("Failed to fetch prompts");
+      }
+
+      return data.map((item): Prompt => ({
+        id: item.id,
+        title: item.title,
+        description: item.description,
+        content: item.content,
+        category: item.category as Category,
+        tags: item.tags,
+        author: {
+          name: item.profiles?.name || "Anonymous",
+          avatar: item.profiles?.avatar_url
+        },
+        stats: item.stats,
+        createdAt: item.created_at
+      }));
+    }
+  });
+
+  // Filter prompts by search query
+  const filteredPrompts = prompts?.filter(prompt => {
+    if (!searchQuery) return true;
+    
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      prompt.title.toLowerCase().includes(searchLower) ||
+      prompt.description.toLowerCase().includes(searchLower) ||
+      prompt.tags.some(tag => tag.toLowerCase().includes(searchLower))
+    );
+  });
+
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-neutral-950">
       <Navbar />
@@ -16,12 +96,32 @@ const Explore = () => {
             Discover the best prompts created by our community. Find inspiration for your next project.
           </p>
           
-          {/* Placeholder content - will be replaced with actual explore content */}
-          <div className="bg-neutral-100 dark:bg-neutral-800 rounded-lg p-12 text-center">
-            <h2 className="text-xl font-medium text-neutral-600 dark:text-neutral-300">
-              Explore page content coming soon
-            </h2>
+          <div className="flex flex-col md:flex-row gap-4 mb-8">
+            <div className="flex-grow">
+              <SearchBar 
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Search prompts by title, description, or tags..."
+              />
+            </div>
+            <div>
+              <FilterMenu filters={filters} onChange={setFilters} />
+            </div>
           </div>
+          
+          {error ? (
+            <div className="p-8 text-center rounded-lg bg-red-50 dark:bg-red-900/10">
+              <p className="text-red-600 dark:text-red-400">
+                Failed to load prompts. Please try again later.
+              </p>
+            </div>
+          ) : (
+            <PromptGrid 
+              prompts={filteredPrompts || []} 
+              isLoading={isLoading} 
+              emptyMessage="No prompts found. Try adjusting your search or filters."
+            />
+          )}
         </div>
       </main>
       
