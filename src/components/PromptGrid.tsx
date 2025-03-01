@@ -5,11 +5,19 @@ import { Prompt, SearchFilters } from "@/lib/types";
 
 interface PromptGridProps {
   prompts: Prompt[];
-  filters: SearchFilters;
+  filters?: SearchFilters;
   searchQuery?: string;
+  isLoading?: boolean;
+  emptyMessage?: string;
 }
 
-const PromptGrid = ({ prompts, filters, searchQuery }: PromptGridProps) => {
+const PromptGrid = ({ 
+  prompts, 
+  filters, 
+  searchQuery, 
+  isLoading: externalLoading = false, 
+  emptyMessage = "No prompts found" 
+}: PromptGridProps) => {
   const [filteredPrompts, setFilteredPrompts] = useState<Prompt[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -20,8 +28,8 @@ const PromptGrid = ({ prompts, filters, searchQuery }: PromptGridProps) => {
     const timer = setTimeout(() => {
       let results = [...prompts];
       
-      // Apply category filter
-      if (filters.category && filters.category !== "All") {
+      // Apply category filter if filters are provided
+      if (filters && filters.category && filters.category !== "All") {
         results = results.filter(
           (prompt) => prompt.category === filters.category
         );
@@ -39,15 +47,17 @@ const PromptGrid = ({ prompts, filters, searchQuery }: PromptGridProps) => {
         );
       }
       
-      // Apply sorting
-      if (filters.sortBy === "popular") {
-        results.sort((a, b) => b.stats.views - a.stats.views);
-      } else if (filters.sortBy === "newest") {
-        results.sort(
-          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        );
-      } else if (filters.sortBy === "most copied") {
-        results.sort((a, b) => b.stats.copies - a.stats.copies);
+      // Apply sorting if filters are provided
+      if (filters) {
+        if (filters.sortBy === "popular") {
+          results.sort((a, b) => b.stats.views - a.stats.views);
+        } else if (filters.sortBy === "newest") {
+          results.sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        } else if (filters.sortBy === "most copied") {
+          results.sort((a, b) => b.stats.copies - a.stats.copies);
+        }
       }
       
       setFilteredPrompts(results);
@@ -57,7 +67,7 @@ const PromptGrid = ({ prompts, filters, searchQuery }: PromptGridProps) => {
     return () => clearTimeout(timer);
   }, [prompts, filters, searchQuery]);
 
-  if (isLoading) {
+  if (externalLoading || isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[...Array(6)].map((_, index) => (
@@ -74,7 +84,7 @@ const PromptGrid = ({ prompts, filters, searchQuery }: PromptGridProps) => {
     return (
       <div className="text-center py-16">
         <h3 className="text-xl font-medium text-neutral-700 dark:text-neutral-300">
-          No prompts found
+          {emptyMessage}
         </h3>
         <p className="mt-2 text-neutral-500 dark:text-neutral-400">
           Try adjusting your search or filter criteria.

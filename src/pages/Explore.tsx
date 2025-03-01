@@ -54,20 +54,32 @@ const Explore = () => {
         throw new Error("Failed to fetch prompts");
       }
 
-      return data.map((item): Prompt => ({
-        id: item.id,
-        title: item.title,
-        description: item.description,
-        content: item.content,
-        category: item.category as Category,
-        tags: item.tags,
-        author: {
-          name: item.profiles?.name || "Anonymous",
-          avatar: item.profiles?.avatar_url
-        },
-        stats: item.stats,
-        createdAt: item.created_at
-      }));
+      return data.map((item): Prompt => {
+        // Parse the stats from JSON if needed
+        let stats = { views: 0, copies: 0, likes: 0 };
+        if (typeof item.stats === 'object' && item.stats !== null) {
+          stats = {
+            views: item.stats.views || 0,
+            copies: item.stats.copies || 0,
+            likes: item.stats.likes || 0
+          };
+        }
+
+        return {
+          id: item.id,
+          title: item.title,
+          description: item.description,
+          content: item.content,
+          category: item.category as Category,
+          tags: item.tags || [],
+          author: {
+            name: item.profiles?.name || "Anonymous",
+            avatar: item.profiles?.avatar_url
+          },
+          stats: stats,
+          createdAt: item.created_at
+        };
+      });
     }
   });
 

@@ -1,30 +1,28 @@
 
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { useState } from "react";
 
 interface SearchBarProps {
-  onSearch: (query: string) => void;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
 }
 
-const SearchBar = ({ onSearch }: SearchBarProps) => {
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const handleSearch = (e: React.FormEvent) => {
+const SearchBar = ({ value, onChange, placeholder = "Search..." }: SearchBarProps) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch(searchQuery);
   };
 
   return (
     <form 
-      onSubmit={handleSearch}
+      onSubmit={handleSubmit}
       className="relative w-full max-w-xl mx-auto transition-all duration-300 hover:shadow-sm focus-within:shadow-sm rounded-full"
     >
       <Input
         type="text"
-        placeholder="Search for prompts..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
         className="h-12 pr-12 pl-5 rounded-full border-neutral-200 focus:border-bazaar-400 transition-all"
       />
       <button

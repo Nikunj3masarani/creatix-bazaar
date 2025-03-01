@@ -4,7 +4,7 @@ export interface Prompt {
   title: string;
   description: string;
   content: string;
-  category: string;
+  category: Category;
   tags: string[];
   author: {
     name: string;

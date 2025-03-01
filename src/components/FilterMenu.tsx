@@ -18,21 +18,21 @@ import { categories } from "@/lib/data";
 
 interface FilterMenuProps {
   filters: SearchFilters;
-  onFilterChange: (filters: SearchFilters) => void;
+  onChange: (filters: SearchFilters) => void;
 }
 
-const FilterMenu = ({ filters, onFilterChange }: FilterMenuProps) => {
+const FilterMenu = ({ filters, onChange }: FilterMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleCategoryChange = (value: string) => {
-    onFilterChange({ 
+    onChange({ 
       ...filters, 
       category: value as Category 
     });
   };
 
   const handleSortChange = (value: string) => {
-    onFilterChange({ 
+    onChange({ 
       ...filters, 
       sortBy: value as "popular" | "newest" | "most copied" 
     });
